@@ -18,16 +18,32 @@ The skill:
 
 ## Installation
 
-```bash
-/plugin install schedule-after-usage-reset@<marketplace>
+**Step 1 — Register the marketplace:**
+
+```
+/plugin marketplace add lemondepat/schedule-after-usage-reset
 ```
 
-Or manually copy `skills/schedule-after-usage-reset/` into `~/.claude/skills/`.
+**Step 2 — Install the skill:**
+
+```
+/plugin install schedule-after-usage-reset@lemondepat
+```
+
+**Step 3 — Reload:**
+
+```
+/reload-plugins
+```
+
+### Manual install
+
+Copy `skills/schedule-after-usage-reset/` into `~/.claude/skills/`.
 
 ## Requirements
 
-- Claude Code with the `schedule` skill installed (used internally to actually schedule the task)
-- macOS Keychain entry `Claude Code-credentials` (set automatically by Claude Code on login)
+- Claude Code with the `schedule` skill installed (used internally to schedule the task)
+- macOS — relies on Keychain entry `Claude Code-credentials` (set automatically by Claude Code on login)
 
 ## Usage
 
@@ -37,13 +53,7 @@ Trigger it naturally in conversation:
 schedule this after my usage resets: summarize the new PRs in my inbox
 ```
 
-Or call it explicitly:
-
-```
-/schedule-after-usage-reset summarize the new PRs in my inbox
-```
-
-If you don't provide a task, it will ask you what to run.
+The skill picks up any phrasing around "usage resets", "tokens refresh", "limit lifts", etc. — no slash command needed.
 
 ## License
 
