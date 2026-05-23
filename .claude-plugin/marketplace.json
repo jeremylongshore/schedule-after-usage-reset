@@ -1,5 +1,5 @@
 {
-  "name": "schedule-after-usage-reset",
+  "name": "lemondepat",
   "description": "Automatically find the Claude usage reset time and schedule a deferred task to run right after the limit lifts.",
   "owner": {
     "name": "lemondepat",
