@@ -1,0 +1,20 @@
+{
+  "name": "schedule-after-usage-reset",
+  "description": "Automatically find the Claude usage reset time and schedule a deferred task to run right after the limit lifts.",
+  "owner": {
+    "name": "lemondepat",
+    "url": "https://github.com/lemondepat"
+  },
+  "plugins": [
+    {
+      "name": "schedule-after-usage-reset",
+      "description": "Automatically find the Claude usage reset time and schedule a deferred task to run right after the limit lifts.",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "lemondepat",
+        "url": "https://github.com/lemondepat"
+      }
+    }
+  ]
+}
