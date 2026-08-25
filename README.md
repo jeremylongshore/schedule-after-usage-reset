@@ -2,6 +2,8 @@
 
 A Claude Code skill that automatically finds your Claude usage reset time and schedules a deferred task to run right after the limit lifts.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U5S225PTME)
+
 ## What it does
 
 When you hit a Claude usage limit and want to queue work for after the reset, just say:
