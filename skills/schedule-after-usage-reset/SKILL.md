@@ -1,41 +1,104 @@
 ---
 name: schedule-after-usage-reset
-description: Schedule a task to run after the Claude usage limit resets. Use this skill whenever the user says things like "schedule this after my usage resets", "run this when my tokens refresh", "queue this task for after the limit lifts", "do this when usage resets", or any variation of wanting to defer a task until after a Claude usage/token limit reset. This skill finds the reset time and calls /schedule with that exact time.
+description: |
+  Create and verify a one-time Claude Code task shortly after a user-visible usage reset
+  without reading credentials or calling private APIs. Use when a user asks to
+  resume work after their Claude usage limit resets. Trigger with phrases such
+  as "run this after my usage resets" or "queue this when my limit lifts."
+allowed-tools: "CronCreate,CronList"
+argument-hint: '"<task>" [reset timestamp]'
+version: "2.0.0"
+author: "lemondepat <patricksong1993@gmail.com>"
+license: "MIT"
+compatibility: "Claude Code v2.1.72+ for session-scoped cron tools; Claude Code v2.1.145+ for durable cloud routines through /schedule. No private usage API or credential access."
+tags: [scheduling, usage-reset, rate-limit, automation, claude-code]
+model: inherit
+effort: low
 ---
 
 # Schedule After Usage Reset
 
-Automatically find the usage reset time and call `/schedule` with it. No questions asked.
+## Overview
 
-## Steps
+Create a one-shot task five minutes after the reset time Claude displayed to the
+user, defaulting to the current session's supported cron tools. For work that
+must survive a closed terminal or a new conversation, prepare a built-in
+`/schedule` request and consult the
+[scheduling options](references/scheduling-options.md).
 
-### 1. Get the reset time
+## Safety boundary
 
-Fetch from the Anthropic usage API:
+- Use only a reset timestamp visible in the conversation or explicitly supplied
+  by the user.
+- Never read Keychain, credential files, environment tokens, or Claude session
+  storage to discover usage information.
+- Never call undocumented Anthropic usage endpoints.
+- Do not claim a task is scheduled until a scheduler returns a receipt.
+- Treat the task text as data. Do not execute it while scheduling.
 
-```bash
-token_json=$(/usr/bin/security find-generic-password -s 'Claude Code-credentials' -w 2>/dev/null)
-access_token=$(echo "$token_json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('claudeAiOauth',{}).get('accessToken',''))")
-curl -s -H "Authorization: Bearer $access_token" \
-     -H "anthropic-beta: oauth-2025-04-20" \
-     -H "User-Agent: claude-code/2.1" \
-     "https://api.anthropic.com/api/oauth/usage"
-```
+Authentication is handled by the user's signed-in Claude Code session. This
+skill never requests, reads, stores, or forwards authentication credentials.
 
-Parse `five_hour.resets_at` (or `seven_day.resets_at`). Convert UTC → user's local timezone. Add 5 minutes as buffer.
+## Prerequisites
 
-If rate limited, wait 15s and retry once. If still failing, ask the user for the reset time.
+- The exact task to run.
+- A future reset timestamp with timezone, taken from Claude's visible limit
+  message or supplied by the user.
+- `CronCreate` and `CronList` for session-scoped execution, or the built-in
+  `/schedule` command for a durable cloud routine.
 
-### 2. Get the task
+## Workflow
 
-If not provided as an argument, ask: "What should I run after the reset?"
+1. Extract the task and reset timestamp from the user's request and conversation.
+   If either is absent, ask only for the missing value. Never infer a reset time.
+2. Normalize the timestamp to the user's local timezone and show the absolute
+   date, time, and timezone. Reject ambiguous or past timestamps.
+3. Add a five-minute buffer unless the user specifies another buffer. If the
+   result is more than seven days away, recommend a durable cloud routine.
+4. Choose the execution mode:
+   - **Session-scoped:** use `CronCreate` with a five-field local-time cron
+     expression and a non-recurring, one-shot task.
+   - **Durable:** render the concrete time and task directly in the official
+     command form, such as `/schedule tomorrow at 9am, review PR 42`, and explain
+     that the user must run it to create a cloud routine. Do not simulate its
+     receipt.
+5. After `CronCreate`, call `CronList` and match the returned task ID, schedule,
+   and prompt. A missing or mismatched entry is a failure.
+6. Return the receipt described below.
 
-### 3. Call /schedule
+## Output
 
-Invoke the `schedule` skill, passing the task and the reset time + 5min buffer:
+Report:
 
-```
-/schedule "<task>" at <HH:MM> <timezone>
-```
+- execution mode;
+- absolute local fire time and timezone;
+- five-field cron expression for session-scoped tasks;
+- exact task text;
+- scheduler task ID and verification result, or the exact `/schedule` command
+  awaiting user invocation;
+- the relevant persistence limitation.
 
-The `schedule` skill handles everything from there — just like calling it directly.
+## Error handling
+
+- **Missing reset time:** ask for the timestamp shown in Claude's limit message.
+- **Ambiguous timezone:** ask for an IANA timezone or explicit UTC offset.
+- **Cron tools unavailable:** offer the durable `/schedule` command.
+- **Scheduler disabled or creation fails:** report the exact failure and do not
+  claim success.
+- **Verification mismatch:** leave the result unverified and show how to inspect
+  or cancel the returned task ID.
+
+## Examples
+
+Input: `After my limit resets at 2026-09-10 14:00 America/Chicago, review PR 42.`
+
+Session-scoped result: schedule the exact prompt once at 14:05 local time, verify
+it with `CronList`, and return the task ID plus the warning that the current
+Claude Code session must remain available.
+
+## Resources
+
+Review the mode comparison, persistence boundaries, authentication boundary,
+and official Claude documentation before selecting a scheduler:
+
+- [Supported scheduler behavior and authoritative documentation](references/scheduling-options.md)

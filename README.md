@@ -1,61 +1,58 @@
 # schedule-after-usage-reset
 
-A Claude Code skill that automatically finds your Claude usage reset time and schedules a deferred task to run right after the limit lifts.
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U5S225PTME)
+A Claude Code skill for safely queueing a one-time task shortly after a visible
+usage-limit reset. It uses Claude Code's supported scheduler surfaces and never
+extracts account credentials or calls private usage APIs.
 
 ## What it does
 
-When you hit a Claude usage limit and want to queue work for after the reset, just say:
+When you say “run this after my usage resets,” the skill:
 
-- "schedule this after my usage resets"
-- "run this when my tokens refresh"
-- "queue this task for after the limit lifts"
-- "do this when usage resets"
+1. reads the reset timestamp from the conversation or asks you to provide it;
+2. adds a five-minute safety buffer;
+3. creates and verifies a session-scoped one-shot task with Claude Code's cron
+   tools, or prepares a built-in `/schedule` command for a durable cloud routine;
+4. returns a receipt with the exact task, time, mode, and persistence limits.
 
-The skill:
-1. Fetches your actual reset time from the Anthropic usage API (no guessing)
-2. Adds a 5-minute buffer so Claude is definitely available
-3. Calls `/schedule` with the exact time and your task
+The skill does not inspect macOS Keychain, local credential files, environment
+tokens, or undocumented Anthropic endpoints.
 
 ## Installation
 
-**Step 1 — Register the marketplace:**
+### Claude Code plugin
 
-```
-/plugin marketplace add lemondepat/schedule-after-usage-reset
-```
-
-**Step 2 — Install the skill:**
-
-```
+```text
+/plugin marketplace add jeremylongshore/schedule-after-usage-reset
 /plugin install schedule-after-usage-reset@lemondepat
 ```
 
-**Step 3 — Reload:**
+Reload plugins after installation if Claude Code requests it.
 
+### Agent Skills CLI
+
+```bash
+npx skills add jeremylongshore/schedule-after-usage-reset --skill schedule-after-usage-reset
 ```
-/reload-plugins
-```
 
-### Manual install
+### Manual
 
-Copy `skills/schedule-after-usage-reset/` into `~/.claude/skills/`.
+Copy `skills/schedule-after-usage-reset/` into your agent's skills directory.
 
 ## Requirements
 
-- Claude Code with the `schedule` skill installed (used internally to schedule the task)
-- macOS — relies on Keychain entry `Claude Code-credentials` (set automatically by Claude Code on login)
+- Claude Code v2.1.72 or later for session-scoped cron tools.
+- Claude Code v2.1.145 or later for durable cloud routines through `/schedule`.
+- A reset timestamp displayed by Claude or explicitly supplied by the user.
 
-## Usage
+Session-scoped tasks only fire while the session is available. Use a cloud
+routine or Claude Desktop scheduled task when the work must survive a closed
+terminal.
 
-Trigger it naturally in conversation:
+## Attribution
 
-```
-schedule this after my usage resets: summarize the new PRs in my inbox
-```
-
-The skill picks up any phrasing around "usage resets", "tokens refresh", "limit lifts", etc. — no slash command needed.
+Created by lemondepat (Patrick Song). Maintained in the public
+[`jeremylongshore/schedule-after-usage-reset`](https://github.com/jeremylongshore/schedule-after-usage-reset)
+repository.
 
 ## License
 
