@@ -1,13 +1,14 @@
 {
   "name": "schedule-after-usage-reset",
-  "version": "1.0.0",
-  "description": "Automatically find the Claude usage reset time and schedule a deferred task to run right after the limit lifts.",
+  "version": "2.0.0",
+  "description": "Safely schedule a one-time task after a user-visible Claude usage reset using supported scheduler surfaces.",
   "author": {
     "name": "patricksong1993",
-    "url": "https://github.com/patricksong1993"
+    "email": "patricksong1993@gmail.com"
   },
-  "homepage": "https://github.com/patricksong1993/schedule-after-usage-reset",
-  "repository": "https://github.com/patricksong1993/schedule-after-usage-reset",
+  "homepage": "https://github.com/jeremylongshore/schedule-after-usage-reset",
+  "repository": "https://github.com/jeremylongshore/schedule-after-usage-reset",
   "license": "MIT",
-  "keywords": ["schedule", "usage-reset", "rate-limit", "claude-code", "automation"]
+  "keywords": ["schedule", "usage-reset", "rate-limit", "claude-code", "automation"],
+  "skills": "./skills/"
 }
